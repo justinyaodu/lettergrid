@@ -1,13 +1,33 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+h2 {
+  font-size: 1.25rem !important;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+.Game {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.Board tr {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.BoardCell {
+  width: 2em;
+  height: 2em;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.BoardCell > input {
+  width: 1.5em;
+  height: 1.5em;
+  text-align: center;
+}
+
+.Debug > textarea {
+  font: monospace;
+  width: 100vw;
 }
