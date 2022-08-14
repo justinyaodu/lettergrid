@@ -35,6 +35,7 @@ interface Player {
 }
 
 interface Game {
+    readonly useDictionary: boolean;
     readonly squares: Square[][];
     readonly tiles: (PlacedTile | null)[][];
     readonly tileSet: TileSet;
@@ -64,6 +65,7 @@ function newGame(): Game {
     const squares = parseSquares(scrabbleBoard);
     const tiles = squares.map((row) => row.map((square) => null));
     return {
+        useDictionary: true,
         tileSet: scrabbleTileSet,
         squares,
         tiles,
@@ -150,7 +152,6 @@ function makeMove(game: Game, tilePlacements: TilePlacement[]): Game | string {
 
     // Find all constructed words.
     const allWordRects: [number, number, number, number][] = [];
-    console.log(newTiles);
     for (let i = 0; i < newTiles.length; i++) {
         let range: [number, number] | null = null;
         for (let j = 0; j <= newTiles[i].length; j++) {
@@ -212,9 +213,11 @@ function makeMove(game: Game, tilePlacements: TilePlacement[]): Game | string {
         points += 50;
     }
 
-    const invalidWords = words.filter((word) => !validWords.has(word));
-    if (invalidWords.length > 0) {
-        return "Words are not valid: " + invalidWords.join(", ");
+    if (game.useDictionary) {
+        const invalidWords = words.filter((word) => !validWords.has(word));
+        if (invalidWords.length > 0) {
+            return "Words are not valid: " + invalidWords.join(", ");
+        }
     }
 
     return {
@@ -376,13 +379,17 @@ function Board({ game, setGame }: { game: Game, setGame: SetGame }) {
     )
 }
 
-function Players({ game, setGame }: { game: Game, setGame: SetGame }) {
+function Setup({ game, setGame }: { game: Game, setGame: SetGame }) {
     return (
         <Form>
-            <h2>Players</h2>
-            <FormControl onChange={(event) => {
-                setGame(setPlayers(game, event.target.value.split(/\s+/).filter((s) => s.length > 0).map((name) => ({ name }))))
-            }}></FormControl>
+            <h2>Setup</h2>
+            <Form.Group>
+                <Form.Label htmlFor="players">{"Player names (space separated, starting with the first player to move)"}</Form.Label>
+                <FormControl id="players" onChange={(event) => {
+                    setGame(setPlayers(game, event.target.value.split(/\s+/).filter((s) => s.length > 0).map((name) => ({ name }))))
+                }}></FormControl>
+            </Form.Group>
+            <Form.Check type="checkbox" label="Use dictionary to reject invalid words" checked={game.useDictionary} onChange={(e) => setGame({ ...game, useDictionary: e.target.checked })} />
         </Form>
     );
 }
@@ -424,7 +431,7 @@ function Moves({ game }: { game: Game }) {
     return (
         <div>
             <h2>Moves</h2>
-            <ol style={{fontSize: "0.5rem"}}>
+            <ol style={{ fontSize: "0.5rem" }}>
                 {game.moves.map((move, i) => (
                     <li key={i}>
                         {(getPlayerForMove(game, i)?.name || "unknown") + (move.words.length === 0 ? " passed" : ` played ${move.words.join("/")} for ${move.points} points`)}
@@ -453,7 +460,7 @@ export default function Game() {
             <div className="Game">
                 <Board game={game} setGame={setGame}></Board>
                 <div>
-                    <Players game={game} setGame={setGame} />
+                    <Setup game={game} setGame={setGame} />
                     <Scoreboard game={game} />
                     <Moves game={game} />
                 </div>
