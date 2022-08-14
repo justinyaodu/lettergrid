@@ -27,6 +27,23 @@ h2 {
   text-align: center;
 }
 
+.BoardCell > .tile {
+  width: 1.5em;
+  height: 1.5em;
+  background: #fff0c0;
+  text-align: center;
+  position: relative;
+}
+
+.BoardCell .tilePoints {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  font-size: 0.5em;
+  text-align: right;
+  top: 1.5em;
+}
+
 .Debug > textarea {
   font: monospace;
   width: 100vw;

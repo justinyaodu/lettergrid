@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { Button, Form, FormControl } from "react-bootstrap";
+import rawDictionary from "./dictionary.json";
+
+const validWords = new Set(rawDictionary);
 
 interface TileSet {
     readonly tileScores: Record<string, number>;
@@ -86,6 +89,10 @@ function makeMove(game: Game, tilePlacements: TilePlacement[]): Game | string {
             ...game,
             moves: [...game.moves, { tiles: [], words: [], points: 0 }]
         };
+    }
+
+    if (tilePlacements.length > 7) {
+        return "Cannot place more than 7 tiles";
     }
 
     for (const tilePlacement of tilePlacements) {
@@ -201,6 +208,15 @@ function makeMove(game: Game, tilePlacements: TilePlacement[]): Game | string {
         points += letterPoints * wordMultiplier;
     }
 
+    if (tilePlacements.length === 7) {
+        points += 50;
+    }
+
+    const invalidWords = words.filter((word) => !validWords.has(word));
+    if (invalidWords.length > 0) {
+        return "Words are not valid: " + invalidWords.join(", ");
+    }
+
     return {
         ...game,
         tiles: newTiles,
@@ -278,7 +294,7 @@ function squareColor(square: Square): string {
     return "#fffff";
 }
 
-function BoardCell({ square, tile, onChange }: { square: Square, tile: PlacedTile | null, onChange: (text: string) => void }) {
+function BoardCell({ game, square, tile, onChange }: { game: Game, square: Square, tile: PlacedTile | null, onChange: (text: string) => void }) {
     return (
         <td className="BoardCell" style={{ backgroundColor: squareColor(square) }}>
             {
@@ -286,7 +302,13 @@ function BoardCell({ square, tile, onChange }: { square: Square, tile: PlacedTil
                     ? (
                         <input type="text" onChange={(event) => onChange(event.target.value)} />
                     )
-                    : (tile.tile === " " ? tile.letter.toUpperCase() : tile.letter)
+                    : (<div className="tile">
+                        <span>{
+                            tile.tile === " " ? tile.letter.toUpperCase() : tile.letter
+                        }</span>
+                        <div className="tilePoints">{game.tileSet.tileScores[tile.tile]}</div>
+                    </div>
+                    )
             }
         </td>
     );
@@ -326,7 +348,7 @@ function Board({ game, setGame }: { game: Game, setGame: SetGame }) {
         if (typeof result === "string") {
             setError(result);
         } else {
-            console.log({player: getPlayerForMove(result, result.moves.length - 1)?.name || "unknown", words: result.moves[result.moves.length - 1].words.join("/")});
+            console.log({ player: getPlayerForMove(result, result.moves.length - 1)?.name || "unknown", words: result.moves[result.moves.length - 1].words.join("/") });
             console.log(JSON.stringify(result));
             setError("");
             setGame(result);
@@ -340,7 +362,7 @@ function Board({ game, setGame }: { game: Game, setGame: SetGame }) {
                 <tbody>
                     {game.squares.map((row, i) => (<tr key={i}>{
                         row.map((square, j) => (
-                            <BoardCell key={j} square={square} tile={game.tiles[i][j]} onChange={(text) => onCellChange(i, j, text)}></BoardCell>
+                            <BoardCell key={j} game={game} square={square} tile={game.tiles[i][j]} onChange={(text) => onCellChange(i, j, text)}></BoardCell>
                         ))
                     }</tr>
                     ))
@@ -402,7 +424,7 @@ function Moves({ game }: { game: Game }) {
     return (
         <div>
             <h2>Moves</h2>
-            <ol>
+            <ol style={{fontSize: "0.5rem"}}>
                 {game.moves.map((move, i) => (
                     <li key={i}>
                         {(getPlayerForMove(game, i)?.name || "unknown") + (move.words.length === 0 ? " passed" : ` played ${move.words.join("/")} for ${move.points} points`)}
@@ -418,7 +440,7 @@ function Debug({ game, setGame }: { game: Game, setGame: SetGame }) {
     return (
         <div className="Debug">
             <h2>Debug</h2>
-            <textarea onChange={(event) => setText(event.target.value)}/>
+            <textarea onChange={(event) => setText(event.target.value)} />
             <Button onClick={() => setGame(JSON.parse(text))}>Load</Button>
         </div>
     );
