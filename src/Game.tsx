@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Form, FormControl } from "react-bootstrap";
+import { Alert, Button, Form, FormControl } from "react-bootstrap";
 import rawDictionary from "./dictionary.json";
 
 const validWords = new Set(rawDictionary);
@@ -360,8 +360,8 @@ function Board({ game, setGame }: { game: Game, setGame: SetGame }) {
     }
 
     return (
-        <div>
-            <table className="Board">
+        <div className="me-3">
+            <table className="Board mb-3">
                 <tbody>
                     {game.squares.map((row, i) => (<tr key={i}>{
                         row.map((square, j) => (
@@ -372,16 +372,18 @@ function Board({ game, setGame }: { game: Game, setGame: SetGame }) {
                     }
                 </tbody>
             </table>
-            <Button onClick={() => doMove(false)}>Play</Button>
-            <Button onClick={() => doMove(true)}>Pass</Button>
-            <p>{error}</p>
+            <div className="BoardButtons mb-3">
+                <Button onClick={() => doMove(false)}>Play</Button>
+                <Button variant="outline-secondary" onClick={() => doMove(true)}>Pass</Button>
+            </div>
+            {error && <Alert variant="danger">{error}</Alert>}
         </div>
     )
 }
 
 function Setup({ game, setGame }: { game: Game, setGame: SetGame }) {
     return (
-        <Form>
+        <Form className="Setup mb-3">
             <h2>Setup</h2>
             <Form.Group>
                 <Form.Label htmlFor="players">{"Player names (space separated, starting with the first player to move)"}</Form.Label>
@@ -431,7 +433,7 @@ function Moves({ game }: { game: Game }) {
     return (
         <div>
             <h2>Moves</h2>
-            <ol style={{ fontSize: "0.5rem" }}>
+            <ol>
                 {game.moves.map((move, i) => (
                     <li key={i}>
                         {(getPlayerForMove(game, i)?.name || "unknown") + (move.words.length === 0 ? " passed" : ` played ${move.words.join("/")} for ${move.points} points`)}
@@ -446,8 +448,11 @@ function Debug({ game, setGame }: { game: Game, setGame: SetGame }) {
     const [text, setText] = useState("");
     return (
         <div className="Debug">
-            <h2>Debug</h2>
-            <textarea onChange={(event) => setText(event.target.value)} />
+            <h2>Load Saved Game</h2>
+            <p>After each move, a save file for your game is printed to your browser console in JSON format. You can copy a save, then paste it here and click "Load" to restore your progress.</p>
+            <div className="mb-3">
+                <textarea onChange={(event) => setText(event.target.value)} />
+            </div>
             <Button onClick={() => setGame(JSON.parse(text))}>Load</Button>
         </div>
     );
@@ -456,16 +461,17 @@ function Debug({ game, setGame }: { game: Game, setGame: SetGame }) {
 export default function Game() {
     const [game, setGame] = useState(newGame());
     return (
-        <>
+        <div className="p-3">
+            <h1>Scrabble Scoring Tool</h1>
+            <Setup game={game} setGame={setGame} />
             <div className="Game">
                 <Board game={game} setGame={setGame}></Board>
                 <div>
-                    <Setup game={game} setGame={setGame} />
                     <Scoreboard game={game} />
                     <Moves game={game} />
                 </div>
             </div>
             <Debug game={game} setGame={setGame} />
-        </>
+        </div>
     );
 }

@@ -1,15 +1,22 @@
+/*
 h2 {
   font-size: 1.25rem !important;
 }
+*/
 
 .Game {
   display: flex;
   flex-flow: row nowrap;
 }
 
+.Board {
+  border: 1px solid black;
+}
+
 .Board tr {
   display: flex;
   flex-flow: row nowrap;
+  font-size: 1.5rem;
 }
 
 .BoardCell {
@@ -44,7 +51,20 @@ h2 {
   top: 1.5em;
 }
 
+.BoardButtons {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: center;
+}
+
+.BoardButtons > * + * {
+  margin-left: 1rem;
+}
+
 .Debug > textarea {
   font: monospace;
-  width: 100vw;
+}
+
+.Setup {
+  max-width: 40rem;
 }
