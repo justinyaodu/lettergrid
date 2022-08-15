@@ -36,6 +36,7 @@ interface Player {
 
 interface Game {
     readonly useDictionary: boolean;
+    readonly checkTilePlacement: boolean;
     readonly squares: Square[][];
     readonly tiles: (PlacedTile | null)[][];
     readonly tileSet: TileSet;
@@ -66,6 +67,7 @@ function newGame(): Game {
     const tiles = squares.map((row) => row.map((square) => null));
     return {
         useDictionary: true,
+        checkTilePlacement: true,
         tileSet: scrabbleTileSet,
         squares,
         tiles,
@@ -93,10 +95,6 @@ function makeMove(game: Game, tilePlacements: TilePlacement[]): Game | string {
         };
     }
 
-    if (tilePlacements.length > 7) {
-        return "Cannot place more than 7 tiles";
-    }
-
     for (const tilePlacement of tilePlacements) {
         if (!(tilePlacement.tile.letter in game.tileSet.tileScores) && tilePlacement.tile.letter !== " ") {
             return `Invalid tile: ${JSON.stringify(tilePlacement.tile.letter)}`;
@@ -115,39 +113,45 @@ function makeMove(game: Game, tilePlacements: TilePlacement[]): Game | string {
     const minCol = Math.min(...tilePlacements.map((p) => p.col));
     const maxCol = Math.max(...tilePlacements.map((p) => p.col));
 
-    if (minRow !== maxRow && minCol !== maxCol) {
-        return "Tiles must be placed in a line";
-    }
+    if (game.checkTilePlacement) {
+        if (tilePlacements.length > 7) {
+            return "Cannot place more than 7 tiles";
+        }
 
-    for (let i = minRow; i <= maxRow; i++) {
-        for (let j = minCol; j <= maxCol; j++) {
-            if (newTiles[i][j] === null) {
-                return "Gaps between tiles are not allowed";
+        if (minRow !== maxRow && minCol !== maxCol) {
+            return "Tiles must be placed in a line";
+        }
+
+        for (let i = minRow; i <= maxRow; i++) {
+            for (let j = minCol; j <= maxCol; j++) {
+                if (newTiles[i][j] === null) {
+                    return "Gaps between tiles are not allowed";
+                }
             }
         }
-    }
 
-    // TODO: first move should be more than 1 letter and should touch the middle of the board
+        // TODO: first move should be more than 1 letter and should touch the middle of the board
 
-    let touching = false;
-    for (let i = minRow; i <= maxRow; i++) {
-        if (minCol - 1 >= 0 && newTiles[i][minCol - 1] !== null) {
-            touching = true;
+        let touching = false;
+        for (let i = minRow; i <= maxRow; i++) {
+            if (minCol - 1 >= 0 && newTiles[i][minCol - 1] !== null) {
+                touching = true;
+            }
+            if (maxCol + 1 < newTiles[i].length && newTiles[i][maxCol + 1] !== null) {
+                touching = true;
+            }
         }
-        if (maxCol + 1 < newTiles[i].length && newTiles[i][maxCol + 1] !== null) {
-            touching = true;
+        for (let j = minCol; j <= maxCol; j++) {
+            if (minRow - 1 >= 0 && newTiles[minRow - 1][j] !== null) {
+                touching = true;
+            }
+            if (maxRow + 1 < newTiles.length && newTiles[maxRow + 1][j] !== null) {
+                touching = true;
+            }
         }
-    }
-    for (let j = minCol; j <= maxCol; j++) {
-        if (minRow - 1 >= 0 && newTiles[minRow - 1][j] !== null) {
-            touching = true;
+        if (!touching && game.tiles.some((row) => row.some((tile) => tile !== null))) {
+            return "Tiles must touch existing tiles";
         }
-        if (maxRow + 1 < newTiles.length && newTiles[maxRow + 1][j] !== null) {
-            touching = true;
-        }
-    }
-    if (!touching && game.tiles.some((row) => row.some((tile) => tile !== null))) {
-        return "Tiles must touch existing tiles";
     }
 
     // Find all constructed words.
@@ -405,11 +409,12 @@ function Setup({ game, setGame }: { game: Game, setGame: SetGame }) {
             <h2>Setup</h2>
             <Form.Group>
                 <Form.Label htmlFor="players">{"Player names (space separated, starting with the first player to move)"}</Form.Label>
-                <FormControl id="players" onChange={(event) => {
+                <FormControl id="players" placeholder="for example: John Paul George Ringo" onChange={(event) => {
                     setGame(setPlayers(game, event.target.value.split(/\s+/).filter((s) => s.length > 0).map((name) => ({ name }))))
                 }}></FormControl>
             </Form.Group>
-            <Form.Check type="checkbox" label="Use dictionary to reject invalid words" checked={game.useDictionary} onChange={(e) => setGame({ ...game, useDictionary: e.target.checked })} />
+            <Form.Check id="use-dictionary" type="checkbox" label="Use dictionary to reject invalid words" checked={game.useDictionary} onChange={(e) => setGame({ ...game, useDictionary: e.target.checked })} />
+            <Form.Check id="check-tile-placement" type="checkbox" label="Enforce tile placement rules" checked={game.checkTilePlacement} onChange={(e) => setGame({ ...game, checkTilePlacement: e.target.checked })} />
         </Form>
     );
 }
