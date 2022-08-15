@@ -470,7 +470,7 @@ function Moves({ game }: { game: Game }) {
 function Debug({ game, setGame }: { game: Game, setGame: SetGame }) {
     const [text, setText] = useState("");
     return (
-        <div className="Debug">
+        <div className="Debug mb-3">
             <h2>Load Saved Game</h2>
             <p>After each move, a save file for your game is printed to your browser console in JSON format. You can copy a save, then paste it here and click "Load" to restore your progress.</p>
             <div className="mb-3">
@@ -486,7 +486,10 @@ export default function Game() {
     return (
         <div className="p-3">
             <h1>Scrabble Scoring Tool</h1>
+            <p>Automatically calculate each player's score during a Scrabble game.</p>
             <Setup game={game} setGame={setGame} />
+            <h2>Board</h2>
+            <p>For each turn, type in the tiles placed and click "Play" below. Use lowercase for normal tiles and uppercase for blank tiles.</p>
             <div className="Game">
                 <Board game={game} setGame={setGame}></Board>
                 <div>
@@ -495,6 +498,8 @@ export default function Game() {
                 </div>
             </div>
             <Debug game={game} setGame={setGame} />
+            <h2>About</h2>
+            <p>Made somewhat hastily by Justin. Check out the source code on <a href="https://github.com/justinyaodu/lettergrid">GitHub</a>.</p>
         </div>
     );
 }
