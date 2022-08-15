@@ -231,6 +231,23 @@ function makeMove(game: Game, tilePlacements: TilePlacement[]): Game | string {
     }
 }
 
+function undo(game: Game): Game {
+    if (game.moves.length === 0) {
+        return game;
+    }
+
+    const newTiles = game.tiles.map((row) => row.map((tile) => tile));
+    for (const tilePlacement of game.moves[game.moves.length - 1].tiles) {
+        newTiles[tilePlacement.row][tilePlacement.col] = null;
+    }
+
+    return {
+        ...game,
+        tiles: newTiles,
+        moves: game.moves.slice(0, -1),
+    };
+}
+
 const scrabbleBoard = `
 T..d...T...d..T
 .D...t...t...D.
@@ -375,6 +392,7 @@ function Board({ game, setGame }: { game: Game, setGame: SetGame }) {
             <div className="BoardButtons mb-3">
                 <Button onClick={() => doMove(false)}>Play</Button>
                 <Button variant="outline-secondary" onClick={() => doMove(true)}>Pass</Button>
+                <Button variant="outline-danger" onClick={() => setGame(undo(game))}>Undo</Button>
             </div>
             {error && <Alert variant="danger">{error}</Alert>}
         </div>
