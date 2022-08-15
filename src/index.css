@@ -28,10 +28,14 @@ h2 {
   align-items: center;
 }
 
-.BoardCell > input {
+.BoardCellInput {
   width: 1.5em;
   height: 1.5em;
   text-align: center;
+}
+
+.BoardCellInput:invalid {
+  background-color: #ffff00;
 }
 
 .BoardCell > .tile {

@@ -303,7 +303,7 @@ function BoardCell({ game, square, tile, onChange }: { game: Game, square: Squar
             {
                 tile === null
                     ? (
-                        <input type="text" onChange={(event) => onChange(event.target.value)} />
+                        <input className="BoardCellInput" type="text" pattern="[A-Za-z]?" maxLength={1} onChange={(event) => onChange(event.target.value)} />
                     )
                     : (<div className="tile">
                         <span>{
