@@ -4,7 +4,6 @@ Automatically calculate each player's score during a Scrabble game. Check it out
 
 ## To-do
 
-* Use arrow keys to move between grid cells
 * Validate tile placement for first move
 
 ## Development
