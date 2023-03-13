@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Alert, Button, Form, FormControl } from "react-bootstrap";
 import rawDictionary from "./dictionary.json";
 
@@ -318,26 +318,54 @@ function squareColor(square: Square): string {
   return "#fffff";
 }
 
-function BoardCellInput({ onChange }: { onChange: (text: string) => void }) {
+type ArrowKey = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight";
+
+function BoardCellInput({ onValueChange, onArrowKey }: { onValueChange: (text: string) => void, onArrowKey: (text: ArrowKey) => void }) {
   const [value, setValue] = useState("");
+  const ref = useRef<HTMLInputElement>(null);
   return (
-    <input className={`BoardCellInput ${value === "" ? "" : "pending"}`} type="text" pattern="[A-Za-z]?" maxLength={1}
+    <input ref={ref} className={`BoardCellInput ${value === "" ? "" : "pending"}`}
+      type="text" pattern="[A-Za-z]?" maxLength={1}
       onChange={(event) => {
         const newValue = event.target.value;
         setValue(newValue);
-        onChange(newValue);
+        onValueChange(newValue);
       }}
-      />
+      onKeyDown={(event) => {
+        const key = event.key;
+
+        // Make TypeScript happy.
+        if (ref.current === null) {
+          return;
+        }
+
+        const cursorPos = ref.current.selectionStart;
+
+        // Do nothing if text is selected.
+        if (cursorPos !== ref.current.selectionEnd) {
+          return;
+        }
+
+        if (key === "ArrowUp"
+          || key === "ArrowDown"
+          // Don't do anything if the cursor is moving within the text field.
+          || (key === "ArrowLeft" && cursorPos === 0)
+          || (key === "ArrowRight" && cursorPos === value.length)) {
+          onArrowKey(key);
+          console.log(key);
+        }
+      }}
+    />
   );
 }
 
-function BoardCell({ game, square, tile, onChange }: { game: Game, square: Square, tile: PlacedTile | null, onChange: (text: string) => void }) {
+function BoardCell({ game, square, tile, onValueChange, onArrowKey }: { game: Game, square: Square, tile: PlacedTile | null, onValueChange: (text: string) => void, onArrowKey: (key: ArrowKey) => void }) {
   return (
     <td className="BoardCell" style={{ backgroundColor: squareColor(square) }}>
       {
         tile === null
           ? (
-            <BoardCellInput onChange={onChange} />
+            <BoardCellInput onValueChange={onValueChange} onArrowKey={onArrowKey} />
           )
           : (<div className="tile">
             <span>{
@@ -354,8 +382,10 @@ function BoardCell({ game, square, tile, onChange }: { game: Game, square: Squar
 type SetGame = (game: Game) => void;
 
 function Board({ game, setGame }: { game: Game, setGame: SetGame }) {
-  const [tilePlacements, setTilePlacements] = useState([] as TilePlacement[]);
+  const [tilePlacements, setTilePlacements] = useState<TilePlacement[]>([]);
   const [error, setError] = useState("");
+
+  const tableRef = useRef<HTMLTableSectionElement>(null);
 
   const onCellChange = (row: number, col: number, text: string) => {
     const newTilePlacements = tilePlacements.filter((p) => p.row !== row || p.col !== col);
@@ -372,6 +402,35 @@ function Board({ game, setGame }: { game: Game, setGame: SetGame }) {
     setTilePlacements(newTilePlacements);
   };
 
+  const onArrowKey = (row: number, col: number, key: ArrowKey) => {
+    // Find the next empty cell in the specified direction, if one exists.
+
+    const dx = { ArrowUp: 0, ArrowDown: 0, ArrowLeft: -1, ArrowRight: 1 }[key];
+    const dy = { ArrowUp: -1, ArrowDown: 1, ArrowLeft: 0, ArrowRight: 0 }[key];
+
+    let targetRow = row + dy;
+    let targetCol = col + dx;
+    const inRange = () => (
+      0 <= targetRow && targetRow < game.tiles.length
+      && 0 <= targetCol && targetCol < game.tiles[0].length
+    );
+
+    while (inRange() && game.tiles[targetRow][targetCol] !== null) {
+      targetRow += dy;
+      targetCol += dx;
+    }
+
+    if (!inRange()) {
+      return;
+    }
+
+    // This is super nasty, but I don't want to bother with refs...
+    if (tableRef.current !== null) {
+      const child = tableRef.current.children[targetRow].children[targetCol].querySelector("input") as HTMLElement;
+      child.focus();
+    }
+  };
+
   const doMove = (pass: boolean) => {
     if (!pass && tilePlacements.length === 0) {
       setError("No tiles placed");
@@ -385,7 +444,10 @@ function Board({ game, setGame }: { game: Game, setGame: SetGame }) {
     if (typeof result === "string") {
       setError(result);
     } else {
-      console.log({ player: getPlayerForMove(result, result.moves.length - 1)?.name || "unknown", words: result.moves[result.moves.length - 1].words.join("/") });
+      console.log({
+        player: getPlayerForMove(result, result.moves.length - 1)?.name || "unknown",
+        words: result.moves[result.moves.length - 1].words.join("/"),
+      });
       console.log(JSON.stringify(result));
       setError("");
       setGame(result);
@@ -396,10 +458,13 @@ function Board({ game, setGame }: { game: Game, setGame: SetGame }) {
   return (
     <div className="me-3">
       <table className="Board mb-3">
-        <tbody>
+        <tbody ref={tableRef}>
           {game.squares.map((row, i) => (<tr key={i}>{
             row.map((square, j) => (
-              <BoardCell key={j} game={game} square={square} tile={game.tiles[i][j]} onChange={(text) => onCellChange(i, j, text)}></BoardCell>
+              <BoardCell key={j} game={game} square={square} tile={game.tiles[i][j]}
+                onValueChange={(text) => onCellChange(i, j, text)}
+                onArrowKey={(key) => onArrowKey(i, j, key)}
+              />
             ))
           }</tr>
           ))
