@@ -352,7 +352,6 @@ function BoardCellInput({ onValueChange, onArrowKey }: { onValueChange: (text: s
           || (key === "ArrowLeft" && cursorPos === 0)
           || (key === "ArrowRight" && cursorPos === value.length)) {
           onArrowKey(key);
-          console.log(key);
         }
       }}
     />
