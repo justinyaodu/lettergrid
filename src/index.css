@@ -34,8 +34,12 @@ h2 {
   text-align: center;
 }
 
+.BoardCellInput.pending {
+  background-color: #ffd080;
+}
+
 .BoardCellInput:invalid {
-  background-color: #ffff00;
+  background-color: #ff8000;
 }
 
 .BoardCell > .tile {

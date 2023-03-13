@@ -318,13 +318,26 @@ function squareColor(square: Square): string {
   return "#fffff";
 }
 
+function BoardCellInput({ onChange }: { onChange: (text: string) => void }) {
+  const [value, setValue] = useState("");
+  return (
+    <input className={`BoardCellInput ${value === "" ? "" : "pending"}`} type="text" pattern="[A-Za-z]?" maxLength={1}
+      onChange={(event) => {
+        const newValue = event.target.value;
+        setValue(newValue);
+        onChange(newValue);
+      }}
+      />
+  );
+}
+
 function BoardCell({ game, square, tile, onChange }: { game: Game, square: Square, tile: PlacedTile | null, onChange: (text: string) => void }) {
   return (
     <td className="BoardCell" style={{ backgroundColor: squareColor(square) }}>
       {
         tile === null
           ? (
-            <input className="BoardCellInput" type="text" pattern="[A-Za-z]?" maxLength={1} onChange={(event) => onChange(event.target.value)} />
+            <BoardCellInput onChange={onChange} />
           )
           : (<div className="tile">
             <span>{
