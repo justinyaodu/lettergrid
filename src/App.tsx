@@ -339,19 +339,12 @@ function BoardCellInput({ onValueChange, onArrowKey }: { onValueChange: (text: s
           return;
         }
 
-        const cursorPos = ref.current.selectionStart;
-
-        // Do nothing if text is selected.
-        if (cursorPos !== ref.current.selectionEnd) {
-          return;
-        }
-
         if (key === "ArrowUp"
           || key === "ArrowDown"
-          // Don't do anything if the cursor is moving within the text field.
-          || (key === "ArrowLeft" && cursorPos === 0)
-          || (key === "ArrowRight" && cursorPos === value.length)) {
+          || key === "ArrowLeft"
+          || key === "ArrowRight") {
           onArrowKey(key);
+          event.preventDefault();
         }
       }}
     />
@@ -425,8 +418,9 @@ function Board({ game, setGame }: { game: Game, setGame: SetGame }) {
 
     // This is super nasty, but I don't want to bother with refs...
     if (tableRef.current !== null) {
-      const child = tableRef.current.children[targetRow].children[targetCol].querySelector("input") as HTMLElement;
+      const child = tableRef.current.children[targetRow].children[targetCol].querySelector("input") as HTMLInputElement;
       child.focus();
+      child.setSelectionRange(0, child.value.length, "forward");
     }
   };
 
